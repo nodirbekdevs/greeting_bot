@@ -1,0 +1,29 @@
+{
+  "name": "greeting_bot",
+  "version": "1.0.0",
+  "description": "Greeting_bot",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nodirbekdevs/greeting_bot.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nodirbekdevs/greeting_bot/issues"
+  },
+  "homepage": "https://github.com/nodirbekdevs/greeting_bot#readme",
+  "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "dotenv": "^16.0.3",
+    "fluent-ffmpeg": "^2.1.2",
+    "mongoose": "^7.0.1",
+    "node-telegram-bot-api": "^0.61.0",
+    "nodemon": "^2.0.21",
+    "uuid": "^9.0.0"
+  }
+}
