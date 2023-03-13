@@ -1,8 +1,8 @@
 const kb = require('./../../helpers/keyboard-buttons')
 const keyboard = require('./../../helpers/keyboard')
 const {getAdvertisements, getAdvertising, makeAdvertising, updateAdvertising, deleteAdvertising, countAdvertisements} = require('./../../controllers/advertisingController')
-const {getAdmin} = require('./../../controllers/adminController')
-const {getClients} = require('./../../controllers/clientController')
+const {updateAdmin} = require('./../../controllers/adminController')
+const {getUsers} = require('./../../controllers/userController')
 const {report} = require('./../../helpers/utils')
 
 let advertising_id
@@ -33,25 +33,18 @@ const aas2 = async (bot, chat_id) => {
     count = await countAdvertisements({status: 'active'})
 
   for (let i = 0; i < advertisements.length; i++) {
-    const advertising = advertisements[i]
+    const advertising = advertisements[i], message = report(advertising, 'ADVERTISING', kb.language.uz)
 
-    const message = report(advertising, 'ADVERTISING', kb.language.uz)
-
-    if (advertising.status === 'approved') {
+    if (!advertising.is_send && advertising.status === 'approved') {
       await bot.sendPhoto(chat_id, advertising.image, {caption: message, parse_mode: 'HTML'})
     } else {
       await bot.sendPhoto(chat_id, advertising.image, {
         caption: message,
         parse_mode: 'HTML',
         reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: kb.options.send_advertise,
-                callback_data: JSON.stringify({phrase: 'SEND_AD', id: advertising._id})
-              }
-            ]
-          ]
+          inline_keyboard: [[{
+            text: kb.options.send_advertise, callback_data: JSON.stringify({phrase: 'SEND_AD', id: advertising._id})
+          }]]
         }
       })
     }
@@ -90,7 +83,6 @@ const aas6 = async (bot, chat_id, advertising, text) => {
 
   const exist_advertising = await getAdvertising({_id: advertising})
 
-
   let message = report(exist_advertising, 'ADVERTISING', '')
   message += `\nTugatilganini tasdiqlaysizmi ?`
 
@@ -103,16 +95,10 @@ const aas6 = async (bot, chat_id, advertising, text) => {
 const aas7 = async (bot, chat_id, advertising, text) => {
   let message
 
-  const admin = await getAdmin({telegram_id: chat_id})
-
   if (text === kb.options.confirmation_advertising.yes) {
     message = "Reklama muvaffaqiyatli yakunlandi"
 
     await updateAdvertising({_id: advertising._id}, {step: 4, status: 'active'})
-
-    admin.advertisements.push(advertising._id)
-    admin.total_advertisements += 1
-    await admin.save()
 
     const clause = report(advertising, 'ADVERTISING', '')
 
@@ -121,14 +107,9 @@ const aas7 = async (bot, chat_id, advertising, text) => {
       parse_mode: 'HTML',
       reply_markup: {
         resize_keyboard: true,
-        inline_keyboard: [
-          [
-            {
-              text: kb.options.send_advertise,
-              callback_data: JSON.stringify({phrase: 'SEND_AD', id: advertising._id})
-            }
-          ]
-        ]
+        inline_keyboard: [[{
+          text: kb.options.send_advertise, callback_data: JSON.stringify({phrase: 'SEND_AD', id: advertising._id})
+        }]]
       }
     })
   }
@@ -143,32 +124,35 @@ const aas7 = async (bot, chat_id, advertising, text) => {
 }
 
 const aas8 = async (bot, chat_id, _id) => {
+  await deleteAdvertising({_id})
+  await aas0(bot, chat_id)
+}
+
+const aas9 = async (bot, chat_id, _id) => {
   let clause
 
-  const advertising = await getAdvertising({_id}), clients = await getClients({status: 'active'})
+  const advertising = await getAdvertising({_id}), admin = await getAdmin({telegram_id: advertising.author}),
+    users = await getUsers({status: 'active'})
 
   if (!advertising.is_send) {
-    for (let i = 0; i < clients.length; i++) {
-      const client = clients[i], message = report(advertising, 'ADVERTISING', '')
+    for (let i = 0; i < users.length; i++) {
+      const user = users[i], message = report(advertising, 'ADVERTISING', '')
 
-      await bot.sendPhoto(client.telegram_id, advertising.image, {caption: message, parse_mode: 'HTML'})
+      await bot.sendPhoto(user.telegram_id, advertising.image, {caption: message, parse_mode: 'HTML'})
     }
 
     await updateAdvertising({_id: advertising._id}, {is_send: true, step: 5, status: 'approved'})
+
+    await updateAdvertising({telegram_id: advertising.author}, {$inc: {total_advertisements: 1}})
 
     clause = 'Reklama barchaga yuborildi'
   } else {
     clause = "Siz bu reklamani taqdim etib bo'lgansiz"
   }
 
-
   await bot.sendMessage(chat_id, clause)
 }
 
-const aas9 = async (bot, chat_id, _id) => {
-  await deleteAdvertising({_id})
-  await aas0(bot, chat_id)
-}
 
 const adminAdvertising = async (bot, chat_id, text) => {
   const advertising = await getAdvertising({_id: advertising_id, status: 'process'})
@@ -182,7 +166,7 @@ const adminAdvertising = async (bot, chat_id, text) => {
 
   if (advertising) {
     if (text === kb.options.back.uz) {
-      await aas9(bot, chat_id, advertising._id)
+      await aas8(bot, chat_id, advertising._id)
     } else if (text !== kb.options.back.uz) {
       if (advertising.step === 0) await aas4(bot, chat_id, advertising._id, text)
       if (advertising.step === 1) await aas5(bot, chat_id, advertising._id, text)
@@ -192,4 +176,4 @@ const adminAdvertising = async (bot, chat_id, text) => {
   }
 }
 
-module.exports = {adminAdvertising, aas8}
+module.exports = {adminAdvertising, aas9}

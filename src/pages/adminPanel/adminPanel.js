@@ -1,8 +1,6 @@
 const {adminMainPage} = require('./mainPage')
 const {adminSettings} = require('./settingsPage')
 const {adminAdvertising} = require('./advertisingPage')
-const {adminCars} = require('./carsPage')
-const {adminOwners} = require('./ownersPage')
 const {getAdmin} = require('./../../controllers/adminController')
 const {adminPanelQuery} = require('./adminPanelQuery')
 
@@ -14,8 +12,6 @@ const adminPanel = async (bot, message, admin) => {
     await adminMainPage(bot, chat_id, text)
     await adminSettings(bot, admin, text)
     await adminAdvertising(bot, chat_id, text)
-    await adminCars(bot, chat_id, text)
-    await adminOwners(bot, chat_id, text)
   } catch (e) {
     console.log(e)
   }

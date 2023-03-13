@@ -2,6 +2,7 @@ const keyboard = require('./../../helpers/keyboard')
 const kb = require('./../../helpers/keyboard-buttons')
 const {getAdmin, updateAdmin} = require('../../controllers/adminController')
 const {report} = require('./../../helpers/utils')
+const {} = require('./../../../uploads/poems')
 
 let type
 
@@ -26,11 +27,11 @@ const asst2 = async (bot, chat_id, text) => {
 
   const admin = await getAdmin({telegram_id: chat_id}), message = report(admin, 'ADMIN', '')
 
+  await bot.sendMessage(chat_id, message)
+
   await bot.sendMessage(chat_id, "Ismingiz muvaffaqiyatli o'zgartirildi", {
     reply_markup: {resize_keyboard: true, keyboard: keyboard.admin.settings}
   })
-
-  await bot.sendMessage(chat_id, message)
 }
 
 const asst3 = async (bot, chat_id) => {
@@ -44,11 +45,11 @@ const asst4 = async (bot, chat_id, text) => {
 
   const admin = await getAdmin({telegram_id: chat_id}), message = report(admin, 'ADMIN', '')
 
+  await bot.sendMessage(chat_id, message)
+
   await bot.sendMessage(chat_id, "Raqamingiz muvaffaqiyatli o'zgartirildi", {
     reply_markup: {resize_keyboard: true, keyboard: keyboard.admin.settings}
   })
-
-  await bot.sendMessage(chat_id, message)
 }
 
 const adminSettings = async (bot, admin, text) => {
@@ -61,6 +62,7 @@ const adminSettings = async (bot, admin, text) => {
       if (text === kb.admin.settings.number) await asst3(bot, admin.telegram_id)
       type = text
     } else if (admin.step === 2) {
+      if (type === kb.options.back.uz) await asst0(bot, admin)
       if (type === kb.admin.settings.name) await asst2(bot, admin.telegram_id, text)
       if (type === kb.admin.settings.number) await asst4(bot, admin.telegram_id, text)
     }

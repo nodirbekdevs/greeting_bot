@@ -56,4 +56,6 @@ const countAllFeedback = async (query) => {
   }
 }
 
-module.exports = {getAllFeedback, getFeedbackPagination, getFeedback, makeFeedback, updateFeedback, deleteFeedback, countAllFeedback}
+module.exports = {
+  getAllFeedback, getFeedbackPagination, getFeedback, makeFeedback, updateFeedback, deleteFeedback, countAllFeedback
+}

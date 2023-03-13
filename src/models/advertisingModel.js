@@ -9,7 +9,6 @@ const Advertising = model('Advertising', new Schema({
   is_send: {type: Boolean, default: false},
   step: {type: Number, default: 0},
   status: {type: String, enum: ['process', 'inactive', 'active', 'approved'], default: 'process'},
-  created_at: {type: Date, default: Date.now}
-}))
+}, {timestamps: true}))
 
 module.exports = Advertising

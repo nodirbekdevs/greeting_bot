@@ -7,11 +7,12 @@ const User = model('User', new Schema({
   name: {type: String, default: ''},
   username: {type: String, default: ''},
   number: {type: String, default: ''},
+  total_feedback: {type: Number, default: 0},
   total_audios: {type: Number, default: 0},
+  balance: {type: Number, default: 0},
   lang: {type: String, enum: ['', kb.language.uz, kb.language.ru], default: ''},
   step: {type: Number, default: 0},
-  status: {type: String, enum: ['active', 'inactive'], default: 'active'},
-  created_at: {type: Date, default: Date.now()}
-}))
+  status: {type: String, enum: ['active', 'inactive'], default: 'active'}
+}, {timestamps: true}))
 
 module.exports = User

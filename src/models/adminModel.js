@@ -6,9 +6,10 @@ const Admin = model('Admin', new Schema({
   name: {type: String, default: ''},
   username: {type: String, default: ''},
   number: {type: String, default: ''},
+  situation: {type: String, default: ''},
+  total_advertisements: {type: Number, default: 0},
   step: {type: Number, default: 0},
-  status: {type: String, enum: ['active', 'inactive'], default: 'active'},
-  created_at: {type: Date, default: Date.now()}
-}))
+  status: {type: String, enum: ['active', 'inactive'], default: 'active'}
+}, {timestamps: true}))
 
 module.exports = Admin
