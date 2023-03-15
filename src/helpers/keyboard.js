@@ -119,11 +119,16 @@ module.exports = {
       ru: [[kb.options.confirmation.ru, kb.options.not_to_confirmation.ru]]
     },
 
-    types: [
-      [kb.options.types.dad, kb.options.types.mum],
-      [kb.options.types.older_brother, kb.options.types.older_sister],
-      [kb.options.types.younger_brother, kb.options.types.younger_brother],
-      [kb.main.uz]
+    types_relations: [
+      [kb.options.types_relations.dad, kb.options.types_relations.mum],
+      [kb.options.types_relations.older_brother, kb.options.types_relations.older_sister],
+      [kb.options.types_relations.younger_brother, kb.options.types_relations.younger_brother],
+      [kb.options.back.uz]
+    ],
+
+    types_gender: [
+      [kb.options.types_gender.male, kb.options.types_gender.female],
+      [kb.options.back.uz]
     ],
 
     feedback: {

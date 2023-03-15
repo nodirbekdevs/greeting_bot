@@ -5,6 +5,8 @@ const Music = model('Music', new Schema({
   author: {type: Number, ref: 'Admin', required: true},
   type: {type: String, enum: ['', 'OTA', 'ONA', 'AKA', 'OPA', 'UKA', 'SINGIL'], default: ''},
   name: {type: String, default: ''},
+  content: {type: String, default: ''},
+  telegram_link: {type: String, default: ''},
   file: {type: String, default: ''},
   total_audios: {type: Number, default: 0},
   step: {type: Number, default: 0},

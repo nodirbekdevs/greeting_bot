@@ -74,7 +74,7 @@ const afs4 = async (bot, chat_id, message_id, data) => {
   }
 }
 
-const afs5 = async (bot, chat_id, query_id, message_id, data, _id) => {
+const afs5 = async (bot, chat_id, message_id, data, _id) => {
   let message
 
   const lang = kb.language.uz
@@ -131,7 +131,7 @@ const afs5 = async (bot, chat_id, query_id, message_id, data, _id) => {
   }
 }
 
-const afs6 = async (bot, chat_id, query_id, message_id, data, _id) => {
+const afs6 = async (bot, chat_id, message_id, data, _id) => {
   let message, information
 
   if (data === 'seen' || data === 'fsb') {
@@ -188,7 +188,7 @@ const afs6 = async (bot, chat_id, query_id, message_id, data, _id) => {
   }
 }
 
-const ownerFeedback = async (bot, chat_id, text) => {
+const adminFeedback = async (bot, chat_id, text) => {
   try {
     if (text === kb.admin.pages.feedback) await afs0(bot, chat_id)
     if (text === kb.admin.feedback.number) await afs1(bot, chat_id)
@@ -199,4 +199,4 @@ const ownerFeedback = async (bot, chat_id, text) => {
   }
 }
 
-module.exports = {ownerFeedback, afs4, afs5, afs6}
+module.exports = {adminFeedback, afs4, afs5, afs6}

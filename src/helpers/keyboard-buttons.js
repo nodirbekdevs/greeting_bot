@@ -128,13 +128,18 @@ module.exports = {
       ru: '🔙 Назад',
     },
 
-    types: {
+    types_relations: {
       dad: 'OTA',
       mum: 'ONA',
       older_brother: 'AKA',
       older_sister: 'OPA',
       younger_brother: "UKA",
       younger_sister: "SINGIL"
+    },
+
+    types_gender: {
+      male: 'ERKAK',
+      female: 'AYOL'
     },
 
     confirmation: {

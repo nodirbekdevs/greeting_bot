@@ -6,6 +6,7 @@ const Felicitation = model('Felicitation', new Schema({
   type: {type: String, enum: ['', 'OTA', 'ONA', 'AKA', 'OPA', 'UKA', 'SINGIL'], default: ''},
   title: {type: String, default: ''},
   content: {type: String, default: ''},
+  telegram_link: {type: String, default: ''},
   file: {type: String, default: ''},
   total_audios: {type: Number, default: 0},
   step: {type: Number, default: 0},

@@ -2,7 +2,6 @@ const keyboard = require('./../../helpers/keyboard')
 const kb = require('./../../helpers/keyboard-buttons')
 const {getAdmin, updateAdmin} = require('../../controllers/adminController')
 const {report} = require('./../../helpers/utils')
-const {} = require('./../../../uploads/poems')
 
 let type
 

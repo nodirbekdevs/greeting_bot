@@ -1,6 +1,9 @@
 const kb = require('./keyboard-buttons')
 const keyboard = require('./keyboard')
 const {getPoems, getPoemPagination, getPoem} = require('./../controllers/poemController')
+const {getRenowns, getRenownPagination, getRenown} = require('./../controllers/renownController')
+const {getFelicitations, getFelicitationPagination, getFelicitation} = require('./../controllers/felicitationController')
+const {getMusics, getMusicPagination, getMusic} = require('./../controllers/musicController')
 const {getAllFeedback, getFeedbackPagination} = require('./../controllers/feedbackController')
 const {getUser} = require('./../controllers/userController')
 
@@ -81,6 +84,16 @@ const report = (data, kw, lang) => {
     message += `\n<pre>${data.content}</pre>`
   }
 
+  if (kw === "FELICITATION") {
+    message += `<b>${data.title}</b>\n`
+    message += `\n<pre>${data.content}</pre>`
+  }
+
+  if (kw === "MUSIC") {
+    message += `<b>${data.name}</b>\n`
+    message += `\n<pre>${data.content}</pre>`
+  }
+
   return message
 }
 
@@ -127,12 +140,248 @@ const poem_pagination = async (page, limit, query) => {
     kbs = {parse_mode: 'HTML', reply_markup: {inline_keyboard: kbb}}
   } else if (poems.length <= 0) {
     text = "Hozircha bu tip uchun sherlar qo'shilmagan"
-    kbs = {reply_markup: {resize_keyboard: true, keyboard: keyboard.options.types}}
+    kbs = {reply_markup: {resize_keyboard: true, keyboard: keyboard.options.types_relations}}
   }
 
   return {text, kbs}
 }
 
+const renown_pagination = async (page, limit, query) => {
+  let offset = limit * (page - 1), text, kbs, kw
+
+  const renowns = await getRenownPagination(query, offset, limit), all_renowns = await getRenowns(query)
+
+  if (renowns.length > 0) {
+    text = `<b>Hozirgi: ${offset + 1}-${renowns.length + offset}, Jami:${all_renowns.length}</b>\n\n`
+
+    let kbb = [], arr = []
+
+    for (let i = 0; i < renowns.length; i++) {
+      const renown = renowns[i]
+
+      const obj = {text: `${i + 1}`, callback_data: JSON.stringify({phrase: 'srenown', id: renown._id})}
+
+      arr.push(obj)
+
+      if (arr.length % 6 === 0) {
+        kbb.push(arr)
+        arr = []
+      }
+
+      text += `<b>${i + 1}.</b> ${renown.name}\n`
+    }
+
+    kbb.push(arr)
+
+    const inline_keyboard = [
+      {text: `⬅️`, callback_data: JSON.stringify({phrase: page !== 1 ? `left#renowns#${page - 1}` : 'none', id: ''})},
+      {text: `❌`, callback_data: JSON.stringify({phrase: `delete`, id: ''})},
+      {
+        text: ` ➡️`,
+        callback_data: JSON.stringify({
+          phrase: renowns.length + offset !== all_renowns.length ? `right#renowns#${page + 1}` : 'none', id: ''
+        })
+      }
+    ]
+
+    kbb.push(inline_keyboard)
+
+    kbs = {parse_mode: 'HTML', reply_markup: {inline_keyboard: kbb}}
+  } else if (renowns.length <= 0) {
+    text = "Hozircha bu tip uchun ismlar qo'shilmagan"
+    kbs = {reply_markup: {resize_keyboard: true, keyboard: keyboard.options.types_gender}}
+  }
+
+  return {text, kbs}
+}
+
+const felicitation_pagination = async (page, limit, query) => {
+  let offset = limit * (page - 1), text, kbs, kw
+
+  const felicitations = await getFelicitationPagination(query, offset, limit), all_felicitations = await getFelicitations(query)
+
+  if (felicitations.length > 0) {
+    text = `<b>Hozirgi: ${offset + 1}-${felicitations.length + offset}, Jami:${all_felicitations.length}</b>\n\n`
+
+    let kbb = [], arr = []
+
+    for (let i = 0; i < felicitations.length; i++) {
+      const felicitation = felicitations[i]
+
+      const obj = {text: `${i + 1}`, callback_data: JSON.stringify({phrase: 'sfelicitation', id: felicitation._id})}
+
+      arr.push(obj)
+
+      if (arr.length % 6 === 0) {
+        kbb.push(arr)
+        arr = []
+      }
+
+      text += `<b>${i + 1}.</b> ${felicitation.name}\n`
+    }
+
+    kbb.push(arr)
+
+    const inline_keyboard = [
+      {text: `⬅️`, callback_data: JSON.stringify({phrase: page !== 1 ? `left#felicitations#${page - 1}` : 'none', id: ''})},
+      {text: `❌`, callback_data: JSON.stringify({phrase: `delete`, id: ''})},
+      {
+        text: ` ➡️`,
+        callback_data: JSON.stringify({
+          phrase: felicitations.length + offset !== all_felicitations.length ? `right#felicitations#${page + 1}` : 'none', id: ''
+        })
+      }
+    ]
+
+    kbb.push(inline_keyboard)
+
+    kbs = {parse_mode: 'HTML', reply_markup: {inline_keyboard: kbb}}
+  } else if (felicitations.length <= 0) {
+    text = "Hozircha bu tip uchun tabriklar qo'shilmagan"
+    kbs = {reply_markup: {resize_keyboard: true, keyboard: keyboard.options.types_relations}}
+  }
+
+  return {text, kbs}
+}
+
+const music_pagination = async (page, limit, query) => {
+  let offset = limit * (page - 1), text, kbs, kw
+
+  const musics = await getMusicPagination(query, offset, limit), all_musics = await getMusics(query)
+
+  if (musics.length > 0) {
+    text = `<b>Hozirgi: ${offset + 1}-${musics.length + offset}, Jami:${all_musics.length}</b>\n\n`
+
+    let kbb = [], arr = []
+
+    for (let i = 0; i < musics.length; i++) {
+      const music = musics[i]
+
+      const obj = {text: `${i + 1}`, callback_data: JSON.stringify({phrase: 'smusic', id: musics._id})}
+
+      arr.push(obj)
+
+      if (arr.length % 6 === 0) {
+        kbb.push(arr)
+        arr = []
+      }
+
+      text += `<b>${i + 1}.</b> ${musics.name}\n`
+    }
+
+    kbb.push(arr)
+
+    const inline_keyboard = [
+      {text: `⬅️`, callback_data: JSON.stringify({phrase: page !== 1 ? `left#musics#${page - 1}` : 'none', id: ''})},
+      {text: `❌`, callback_data: JSON.stringify({phrase: `delete`, id: ''})},
+      {
+        text: ` ➡️`,
+        callback_data: JSON.stringify({
+          phrase: musics.length + offset !== all_musics.length ? `right#musics#${page + 1}` : 'none', id: ''
+        })
+      }
+    ]
+
+    kbb.push(inline_keyboard)
+
+    kbs = {parse_mode: 'HTML', reply_markup: {inline_keyboard: kbb}}
+  } else if (musics.length <= 0) {
+    text = "Hozircha bu tip uchun musiqalar qo'shilmagan"
+    kbs = {reply_markup: {resize_keyboard: true, keyboard: keyboard.options.types_relations}}
+  }
+
+  return {text, kbs}
+}
+
+const pagination = async (page, limit, query, type) => {
+  let offset = limit * (page - 1), text, kbs, clause, data, all_data
+
+  if (type === 'POEM') {
+    data = await getPoemPagination(query, offset, limit)
+    all_data = await getPoems(query)
+    clause = 'poems'
+  } else if (type === 'RENOWN') {
+    data = await getRenownPagination(query, offset, limit)
+    all_data = await getRenowns(query)
+    clause = 'renowns'
+  } else if (type === 'FELICITATION'){
+    data = await getFelicitationPagination(query, offset, limit)
+    all_data = await getFelicitations(query)
+    clause = 'felicitations'
+  } else if (type === 'MUSIC') {
+    data = await getMusicPagination(query, offset, limit)
+    all_data = await getMusics(query)
+    clause = 'musics'
+  }
+
+  if (data.length > 0) {
+    let obj
+
+    text = `<b>Hozirgi: ${offset + 1}-${data.length + offset}, Jami:${all_data.length}</b>\n\n`
+
+    let kbb = [], arr = []
+
+    for (let i = 0; i < data.length; i++) {
+      const info = data[i]
+
+      if (type === 'POEM') {
+        obj = {text: `${i + 1}`, callback_data: JSON.stringify({phrase: 'spoem', id: info._id})}
+      } else if (type === 'RENOWN') {
+        obj = {text: `${i + 1}`, callback_data: JSON.stringify({phrase: 'srenown', id: info._id})}
+      } else if (type === 'FELICITATION'){
+        obj = {text: `${i + 1}`, callback_data: JSON.stringify({phrase: 'sfelicitation', id: info._id})}
+      } else if (type === 'MUSIC') {
+        obj = {text: `${i + 1}`, callback_data: JSON.stringify({phrase: 'smusic', id: info._id})}
+      }
+
+      arr.push(obj)
+
+      if (arr.length % 6 === 0) {
+        kbb.push(arr)
+        arr = []
+      }
+
+      if (type === 'POEM') {
+        text += `<b>${i + 1}.</b> ${info.title}\n`
+      } else if (type === 'FELICITATION' || type === 'RENOWN' || type === 'MUSIC'){
+        text += `<b>${i + 1}.</b> ${info.name}\n`
+      }
+    }
+
+    kbb.push(arr)
+
+    const inline_keyboard = [
+      {text: `⬅️`, callback_data: JSON.stringify({phrase: page !== 1 ? `left#${clause}#${page - 1}` : 'none', id: ''})},
+      {text: `❌`, callback_data: JSON.stringify({phrase: `delete`, id: ''})},
+      {
+        text: ` ➡️`,
+        callback_data: JSON.stringify({
+          phrase: data.length + offset !== all_data.length ? `right#${clause}#${page + 1}` : 'none', id: ''
+        })
+      }
+    ]
+
+    kbb.push(inline_keyboard)
+
+    kbs = {parse_mode: 'HTML', reply_markup: {inline_keyboard: kbb}}
+  } else if (data.length <= 0) {
+    if (type === 'POEM') {
+      text = "Hozircha bu tip uchun sherlar qo'shilmagan"
+      kbs = {reply_markup: {resize_keyboard: true, keyboard: keyboard.options.types_relations}}
+    } else if (type === 'RENOWN') {
+      text = "Hozircha bu tip uchun ismlar qo'shilmagan"
+      kbs = {reply_markup: {resize_keyboard: true, keyboard: keyboard.options.types_relations}}
+    } else if (type === 'FELICITATION'){
+      text = "Hozircha bu tip uchun tabriklar qo'shilmagan"
+      kbs = {reply_markup: {resize_keyboard: true, keyboard: keyboard.options.types_relations}}
+    } else if (type === 'MUSIC') {
+      text = "Hozircha bu tip uchun musiqalar qo'shilmagan"
+      kbs = {reply_markup: {resize_keyboard: true, keyboard: keyboard.options.types_relations}}
+    }
+  }
+
+  return {text, kbs}
+}
 
 const feedback_seen_pagination = async (page, limit, query) => {
   let offset = limit * (page - 1), text, kbb = [], arr = [], kbs, kw
@@ -276,6 +525,9 @@ const parse_number = (text) => {
 module.exports = {
   report,
   poem_pagination,
+  renown_pagination,
+  music_pagination,
+  felicitation_pagination,
   feedback_seen_pagination,
   feedback_done_pagination,
   date,

@@ -5,6 +5,7 @@ const Renown = model('Renown', new Schema({
   author: {type: Number, ref: 'Admin', required: true},
   type: {type: String, enum: ['', 'ERKAK', 'AYOL'], default: ''},
   name: {type: String, default: ''},
+  telegram_link: {type: String, default: ''},
   file: {type: String, default: ''},
   total_audios: {type: Number, default: 0},
   step: {type: Number, default: 0},
