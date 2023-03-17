@@ -31,17 +31,17 @@ module.exports = {
     ],
 
     renown: [
-      [kb.admin.renowns.all, kb.admin.renowns.all],
+      [kb.admin.renowns.all, kb.admin.renowns.add],
       [kb.main.uz]
     ],
 
     felicitations: [
-      [kb.admin.felicitations.all, kb.admin.felicitations.all],
+      [kb.admin.felicitations.all, kb.admin.felicitations.add],
       [kb.main.uz]
     ],
 
     musics: [
-      [kb.admin.musics.all, kb.admin.musics.all],
+      [kb.admin.musics.all, kb.admin.musics.add],
       [kb.main.uz]
     ],
 

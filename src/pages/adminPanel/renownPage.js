@@ -32,29 +32,19 @@ const ars2 = async (bot, chat_id, text) => {
   await bot.sendMessage(chat_id, report.text, report.kbs)
 }
 
-const ars3 = async (bot, chat_id, message_id, data) => {
-  let query, report
-
+const ars3 = async (bot, chat_id, message_id, page) => {
   const type = (await getAdmin({telegram_id: chat_id})).situation.split('_')
 
-  if ((data[0] === 'left' || data[0] === 'right') && data[1] === 'renowns') {
-    query = {author: chat_id, type: type[1], status: 'active'}
+  const report = await renown_pagination(parseInt(page), 6, {author: chat_id, type: type[1], status: 'active'})
 
-    report = await renown_pagination(parseInt(data[2]), 6, query)
-  }
-
-  if (report) {
-    const kbb = report.kbs
-
-    await bot.editMessageText(report.text, {chat_id, message_id, parse_mode: 'HTML', reply_markup: kbb})
-  }
+  await bot.editMessageText(report.text, {chat_id, message_id, parse_mode: 'HTML', reply_markup: report.kbs})
 }
 
 const ars4 = async (bot, chat_id, message_id, _id) => {
   const renown = await getRenown({_id}), message = report(renown, 'RENOWN', kb.language.uz)
 
   await bot.editMessageMedia({type: 'audio', media: renown.file, caption: message, parse_mode: 'HTML'}, {
-    chat_id, message_id,  reply_markup: {
+    chat_id, message_id, reply_markup: {
       inline_keyboard: [[{text: kb.options.back.uz, callback_data: JSON.stringify({phrase: 're_back', id: ''})}]]
     }
   })
@@ -107,7 +97,8 @@ const ars9 = async (bot, chat_id, _id, text) => {
 
   message += `\n\nTugaganini tasdiqlaysizmi ?`
 
-  await bot.sendMessage(chat_id, message, { parse_mode: 'HTML',
+  await bot.sendMessage(chat_id, message, {
+    parse_mode: 'HTML',
     reply_markup: {resize_keyboard: true, keyboard: keyboard.options.confirmation.uz, one_time_keyboard: true}
   })
 }
@@ -122,9 +113,7 @@ const ars10 = async (bot, chat_id, _id, text) => {
 
     const downloaded_path = await bot.downloadFile(renown.telegram_link, join(__dirname, `${kb.options.paths.renown}/${renown.type}/`))
 
-    const old_path = join(downloaded_path)
-
-    await rename(old_path, new_path)
+    await rename(join(downloaded_path), new_path)
 
     await updateRenown({_id}, {file: new_path, step: 4, status: 'active'})
 

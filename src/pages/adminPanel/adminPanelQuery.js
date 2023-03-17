@@ -1,6 +1,6 @@
 const {amp} = require('./mainPage')
 const {aas9} = require('./advertisingPage')
-const {afs4, afs5, afs6} = require('./feedbackPage')
+const {afs3, afs4, afs5} = require('./feedbackPage')
 const {aps0, aps3, aps4, aps5} = require('./poemPage')
 const {ars0, ars3, ars4, ars5} = require('./renownPage')
 const {afls0, afls3, afls4, afls5} = require('./felicitationPage')
@@ -37,16 +37,19 @@ const adminPanelQuery = async (bot, chat_id, query_id, message_id, phrase, id) =
     if (phrase === "SEND_AD") await aas9(bot, chat_id, id)
 
     if (riven && riven.length === 3) {
-      await afs4(bot, chat_id, message_id, riven)
-      await aps3(bot, chat_id, message_id, riven)
-      await ars3(bot, chat_id, message_id, riven)
-      await afls3(bot, chat_id, message_id, riven)
-      await ams3(bot, chat_id, message_id, riven)
+      if (riven[0] === 'left' || riven[0] === 'right') {
+        await afs3(bot, chat_id, message_id, riven)
+
+        if (riven[1] === 'poems') await aps3(bot, chat_id, message_id, riven[2])
+        if (riven[1] === 'renowns') await ars3(bot, chat_id, message_id, riven[2])
+        if (riven[1] === 'felis') await afls3(bot, chat_id, message_id, riven[2])
+        if (riven[1] === 'musics') await ams3(bot, chat_id, message_id, riven[2])
+      }
     }
 
-    if (phrase === 'se_feed' || phrase === 'do_feed') await afs5(bot, chat_id, message_id, phrase, id)
-    if ((phrase === 'seen' || phrase === 'fsb') || (phrase === 'done' || phrase === 'fdb'))
-      await afs6(bot, chat_id, message_id, phrase, id)
+    if (phrase === 'se_feed' || phrase === 'do_feed') await afs4(bot, chat_id, message_id, phrase, id)
+    if ((phrase === 'seen' || phrase === 's_d' || phrase === 'fsb') || (phrase === 'done' || phrase === 'fdb'))
+      await afs5(bot, chat_id, message_id, phrase, id)
 
     if (phrase === 'spoem') await aps4(bot, chat_id, message_id, id)
     if (phrase === 'po_back') await aps5(bot, chat_id, message_id)
@@ -54,7 +57,7 @@ const adminPanelQuery = async (bot, chat_id, query_id, message_id, phrase, id) =
     if (phrase === 'srenown') await ars4(bot, chat_id, message_id, id)
     if (phrase === 're_back') await ars5(bot, chat_id, message_id)
 
-    if (phrase === 'sfelicitation') await afls4(bot, chat_id, message_id, id)
+    if (phrase === 'sfeli') await afls4(bot, chat_id, message_id, id)
     if (phrase === 'fl_back') await afls5(bot, chat_id, message_id)
 
     if (phrase === 'smusic') await ams4(bot, chat_id, message_id, id)

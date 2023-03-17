@@ -8,6 +8,14 @@ const getAudios = async (query) => {
   }
 }
 
+const getAudioPagination = async (query, offset, limit) => {
+  try {
+    return await Audio.find(query).skip(offset).limit(limit)
+  } catch (e) {
+    console.log(e)
+  }
+}
+
 const getAudio = async (query) => {
   try {
     return await Audio.findOne(query)
@@ -48,4 +56,4 @@ const countAudios = async (query) => {
   }
 }
 
-module.exports = {getAudios, getAudio, makeAudio, updateAudio, deleteAudio, countAudios}
+module.exports = {getAudios, getAudioPagination, getAudio, makeAudio, updateAudio, deleteAudio, countAudios}

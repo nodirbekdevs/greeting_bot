@@ -2,11 +2,8 @@ const TelegramBot = require('node-telegram-bot-api')
 const config = require('./helpers/config')
 const db = require('./helpers/db')
 const {adminPanel, adminPanelQuery, getAdmin} = require('./pages/adminPanel/adminPanel')
+const {userPanel, userPanelQuery, getUser} = require('./pages/userPanel/userPanel')
 const {makeAdmin} = require('./controllers/adminController')
-// const {ownerPanel, ownerPanelQuery, getOwner} = require('./pages/ownerPanel/ownerPanel')
-// const {managerPanel, managerPanelQuery, getManager} = require('./pages/managerPanel/managerPanel')
-// const {employeePanel, employeePanelQuery, getEmployee} = require('./pages/employeePanel/employeePanel')
-// const {schedule} = require('./pages/schedule')
 
 const bot = new TelegramBot(config.TOKEN, {polling: true, db})
 
@@ -25,6 +22,7 @@ bot.on('message', async message => {
 
   try {
     if (admin) await adminPanel(bot, message, admin)
+    else await userPanel(bot, message)
   } catch (e) {
     console.log(e)
   }
@@ -34,11 +32,11 @@ bot.on('callback_query', async query => {
   const query_id = query.id, telegram_id = query.from.id, message_id = query.message.message_id,
     {phrase, id} = JSON.parse(query.data), request = {telegram_id, status: 'active'}
 
-
-  const admin = await getAdmin(request)
+  const admin = await getAdmin(request), user = await getUser(request)
 
   try {
     if (admin) await adminPanelQuery(bot, telegram_id, query_id, message_id, phrase, id)
+    if (user) await userPanelQuery(bot, telegram_id, query_id, message_id, phrase, id, user.lang)
   } catch (e) {
     console.log(e)
   }

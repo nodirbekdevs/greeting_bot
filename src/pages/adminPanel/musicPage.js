@@ -2,7 +2,7 @@ const kb = require('./../../helpers/keyboard-buttons')
 const keyboard = require('./../../helpers/keyboard')
 const {mkdir} = require('fs/promises')
 const {existsSync} = require('fs')
-const {rename, readFile} = require('fs/promises')
+const {rename} = require('fs/promises')
 const {join} = require('node:path')
 const {getMusics, getMusic, makeMusic, updateMusic, deleteMusic} = require('./../../controllers/musicController')
 const {getAdmin, updateAdmin} = require('./../../controllers/adminController')
@@ -32,22 +32,12 @@ const ams2 = async (bot, chat_id, text) => {
   await bot.sendMessage(chat_id, report.text, report.kbs)
 }
 
-const ams3 = async (bot, chat_id, message_id, data) => {
-  let query, report
-
+const ams3 = async (bot, chat_id, message_id, page) => {
   const type = (await getAdmin({telegram_id: chat_id})).situation.split('_')
 
-  if ((data[0] === 'left' || data[0] === 'right') && data[1] === 'musics') {
-    query = {author: chat_id, type: type[1], status: 'active'}
+  const report = await music_pagination(parseInt(page), 6, {author: chat_id, type: type[1], status: 'active'})
 
-    report = await music_pagination(parseInt(data[2]), 6, query)
-  }
-
-  if (report) {
-    const kbb = report.kbs
-
-    await bot.editMessageText(report.text, {chat_id, message_id, parse_mode: 'HTML', reply_markup: kbb})
-  }
+  await bot.editMessageText(report.text, {chat_id, message_id, parse_mode: 'HTML', reply_markup: report.kbs})
 }
 
 const ams4 = async (bot, chat_id, message_id, _id) => {
@@ -62,7 +52,7 @@ const ams4 = async (bot, chat_id, message_id, _id) => {
 
 const ams5 = async (bot, chat_id, message_id) => {
   const type = (await getAdmin({telegram_id: chat_id})).situation.split('_'),
-    query = {author: chat_id, type: type[1], status: 'active'}, report = await music_pagination(1, 6, query)
+    report = await music_pagination(1, 6, {author: chat_id, type: type[1], status: 'active'})
 
   await bot.editMessageText(report.text, {
     chat_id, message_id, parse_mode: 'HTML', reply_markup: report.kbs.reply_markup
@@ -81,9 +71,9 @@ const ams6 = async (bot, chat_id) => {
 const ams7 = async (bot, chat_id, _id, text) => {
   await updateMusic({_id}, {type: text, step: 1})
 
-  const path = join(__dirname, `${kb.options.paths.music}/${text}`), checking = existsSync(path)
+  const path = join(__dirname, `${kb.options.paths.music}/${text}`)
 
-  if (!checking) await mkdir(join(__dirname, kb.options.paths.music, `/${text}`))
+  if (!existsSync(path)) await mkdir(join(__dirname, kb.options.paths.music, `/${text}`))
 
   await bot.sendMessage(chat_id, "Musiqaning nomini jo'nating", {
     reply_markup: {resize_keyboard: true, keyboard: keyboard.options.back.uz, one_time_keyboard: true}
@@ -130,9 +120,7 @@ const ams11 = async (bot, chat_id, _id, text) => {
 
     const downloaded_path = await bot.downloadFile(music.telegram_link, join(__dirname, `${kb.options.paths.felicitation}/${music.type}/`))
 
-    const old_path = join(downloaded_path)
-
-    await rename(old_path, new_path)
+    await rename(join(downloaded_path), new_path)
 
     await updateMusic({_id}, {file: new_path, step: 5, status: 'active'})
 
@@ -167,7 +155,7 @@ const adminMusics = async (bot, chat_id, text) => {
   if (text === kb.admin.musics.all) await ams1(bot, chat_id)
   if (text === kb.admin.musics.add) await ams6(bot, chat_id)
 
-  if (admin.step === 6) {
+  if (admin.step === 7) {
     if (text === kb.options.back.uz) {
       await updateAdmin({telegram_id: chat_id}, {situation: '', step: 0})
       await ams0(bot, chat_id)

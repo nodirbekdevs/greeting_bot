@@ -1,7 +1,7 @@
 const kb = require('./../../helpers/keyboard-buttons')
 const keyboard = require('./../../helpers/keyboard')
 const {getFeedback, updateFeedback, countAllFeedback} = require('./../../controllers/feedbackController')
-const {report, date, feedback_seen_pagination, feedback_done_pagination} = require('./../../helpers/utils')
+const {report, date, feedback_pagination} = require('./../../helpers/utils')
 const {getUser} = require('./../../controllers/userController')
 
 const afs0 = async (bot, chat_id) => {
@@ -24,158 +24,126 @@ const afs1 = async (bot, chat_id) => {
   })
 }
 
-const afs2 = async (bot, chat_id) => {
-  const query = {is_read: false, status: 'active'}
+const afs2 = async (bot, chat_id, type) => {
+  let query, message
 
-  const report = await feedback_seen_pagination(1, 6, query)
-
-  if (report.kw === 'YES') {
-    await bot.sendMessage(chat_id, report.text, {parse_mode: 'HTML', reply_markup: report.kbs.reply_markup})
-
-    await bot.sendMessage(chat_id, "Hozirgacha yozilgan yangi izohlar")
-  } else if (report.kw === 'NO') {
-    await bot.sendMessage(chat_id, report.text, report.kbs)
-  }
-}
-
-const afs3 = async (bot, chat_id) => {
-  const query = {is_read: true, status: 'seen'}
-
-  const report = await feedback_done_pagination(1, 6, query)
-
-  if (report.kw === 'YES') {
-    await bot.sendMessage(chat_id, report.text, {parse_mode: 'HTML', reply_markup: report.kbs.reply_markup})
-
-    await bot.sendMessage(chat_id, "Hozirgacha bajarilayotgan izohlar")
-  } else if (report.kw === 'NO') {
-    await bot.sendMessage(chat_id, report.text, report.kbs)
-  }
-}
-
-const afs4 = async (bot, chat_id, message_id, data) => {
-  let query, report, kbb
-
-  if ((data[0] === 'left' || data[0] === 'right') && data[1] === 'selfeedback') {
+  if (type === 'ACTIVE') {
     query = {is_read: false, status: 'active'}
-
-    report = await feedback_seen_pagination(parseInt(data[2]), 6, query)
+    message = "Hozirgacha yozilgan yangi izohlar"
+  } else if (type === 'SEEN') {
+    query = {is_read: false, status: 'seen'}
+    message = "Hozirgacha bajarilayotgan izohlar"
   }
 
-  if ((data[0] === 'left' || data[0] === 'right') && data[1] === 'dofeedback') {
-    query = {is_read: true, status: 'seen'}
+  const report = await feedback_pagination(1, 6, query)
 
-    report = await feedback_done_pagination(parseInt(data[2]), 6, query)
-  }
+  if (report.kw === 'YES') {
+    await bot.sendMessage(chat_id, report.text, report.kbs)
 
-  if (report) {
-    kbb = report.kbs.reply_markup
-
-    await bot.editMessageText(report.text, {chat_id, message_id, parse_mode: 'HTML', reply_markup: kbb})
+    await bot.sendMessage(chat_id, message)
+  } else if (report.kw === 'NO') {
+    await bot.sendMessage(chat_id, report.text, report.kbs)
   }
 }
 
-const afs5 = async (bot, chat_id, message_id, data, _id) => {
-  let message
+const afs3 = async (bot, chat_id, message_id, data) => {
+  let query
 
-  const lang = kb.language.uz
+  if (data[1] === 'selfeedback') query = {is_read: false, status: 'active'}
+  if (data[1] === 'dofeedback') query = {is_read: true, status: 'seen'}
+
+  const report = await feedback_pagination(parseInt(data[2]), 6, query), kbb = report.kbs.reply_markup
+
+  await bot.editMessageText(report.text, {chat_id, message_id, parse_mode: 'HTML', reply_markup: kbb})
+}
+
+const afs4 = async (bot, chat_id, message_id, data, _id) => {
+  let message, info, clause, cqw
+
+  const feedback = await getFeedback({_id}), author = await getUser({telegram_id: feedback.author}),
+    created_at = date(feedback.created_at), lang = kb.language.uz
+
+  const data2 = {author: author.name, mark: feedback.mark, reason: feedback.reason, status: feedback.status, created_at}
 
   if (data === 'se_feed') {
-    const feedback = await getFeedback({_id}), author = await getUser({telegram_id: feedback.author}),
-      created_at = date(feedback.created_at)
+    message = report(data2, 'FEEDBACK', lang)
 
-    const data = {
-      author: author.name,
-      branch: feedback.branch,
-      mark: feedback.mark,
-      reason: feedback.reason,
-      status: feedback.status,
-      created_at
+    if (feedback.status === kb.options.feedback.uz.good || feedback.status === kb.options.feedback.ru.good) {
+      clause = "Ko'rildi"
+      info = 's_d'
+    } else if (feedback.status === kb.options.feedback.uz.bad || feedback.status === kb.options.feedback.ru.bad) {
+      clause = "Muommoni ko'rish boshlandi"
+      info = 'seen'
     }
 
-    message = report(data, 'FEEDBACK', lang)
-
-    await bot.editMessageText(message, {
-      chat_id, message_id, parse_mode: 'HTML',
-      reply_markup: {
-        inline_keyboard: [
-          [{text: "Muommoni ko'rish boshlandi", callback_data: JSON.stringify({phrase: "seen", id: feedback._id})}],
-          [{text: kb.options.back.uz, callback_data: JSON.stringify({phrase: "fsb", id: ''})}],
-        ]
-      }
-    })
+    cqw = 'fsb'
   }
 
   if (data === 'do_feed') {
-    const feedback = await getFeedback({_id}), author = await getUser({telegram_id: feedback.author}),
-      created_at = date(feedback.created_at)
+    message = report(data2, 'FEEDBACK', lang)
 
-    const data = {
-      author: author.name,
-      mark: feedback.mark,
-      reason: feedback.reason,
-      status: feedback.status,
-      created_at
-    }
-
-    message = report(data, 'FEEDBACK', lang)
-
-    await bot.editMessageText(message, {
-      chat_id, message_id, parse_mode: 'HTML',
-      reply_markup: {
-        inline_keyboard: [
-          [{text: "Muommoni hal qilindi", callback_data: JSON.stringify({phrase: "done", id: feedback._id})}],
-          [{text: kb.options.back.uz, callback_data: JSON.stringify({phrase: "fdb", id: ''})}],
-        ]
-      }
-    })
+    clause = "Muommoni hal qilindi"
+    info = "done"
+    cqw = "fdb"
   }
+
+  await bot.editMessageText(message, {
+    chat_id, message_id, parse_mode: 'HTML',
+    reply_markup: {
+      inline_keyboard: [
+        [{text: clause, callback_data: JSON.stringify({phrase: info, id: feedback._id})}],
+        [{text: kb.options.back.uz, callback_data: JSON.stringify({phrase: cqw, id: ''})}],
+      ]
+    }
+  })
 }
 
-const afs6 = async (bot, chat_id, message_id, data, _id) => {
-  let message, information
+const afs5 = async (bot, chat_id, message_id, data, _id) => {
+  let message, information, clause, query
 
-  if (data === 'seen' || data === 'fsb') {
+  const feedback = await getFeedback({_id}), author = await getUser({telegram_id: feedback.author})
+
+  const data2 = {name: author.name, feedback: feedback.reason}
+
+  if (data === 'seen' || data === 's_d' || data === 'fsb') {
     if (data === 'seen') {
-      const feedback = await getFeedback({_id}), author = await getUser({telegram_id: feedback.author})
-
-      const data2 = {name: author.name, feedback: feedback.reason}
-
       if (feedback.status === 'active') {
         await updateFeedback({_id: feedback._id}, {is_read: true, status: 'seen'})
         message = report(data2, 'FEEDBACK_SEEN', author.lang)
       }
 
-      await bot.sendMessage(feedback.author, message)
-
-      await bot.sendMessage(chat_id, "Bu izoh ustida ishlar boshlandi")
+      clause = "Bu izoh ustida ishlar boshlandi"
     }
 
-    const query = {is_read: false, status: 'active'}
+    if (data === 's_d') {
+      if (feedback.status === 'active') {
+        await updateFeedback({_id: feedback._id}, {status: 'done'})
+        message = report(data2, 'FEEDBACK_DONE', author.lang)
+      }
 
-    information = await feedback_seen_pagination(1, 6, query)
+      clause = "Muommo ko'rildi"
+    }
+
+    query = {is_read: false, status: 'active'}
   }
+
   if (data === 'done' || data === 'fdb') {
     if (data === 'done') {
-      const feedback = await getFeedback({_id})
-
-      const author = await getUser({telegram_id: feedback.author})
-
-      const data2 = {name: author.name, feedback: feedback.reason}
-
       if (feedback.status === 'seen') {
         await updateFeedback({_id: feedback._id}, {status: 'done'})
         message = report(data2, 'FEEDBACK_DONE', author.lang)
       }
 
-      await bot.sendMessage(feedback.author, message)
-
-      await bot.sendMessage(chat_id, "Muommoni hal qilindi")
+      clause = "Muommoni hal qilindi"
     }
-
-    const query = {is_read: true, status: 'seen'}
-
-    information = await feedback_done_pagination(1, 6, query)
+    query = {is_read: true, status: 'seen'}
   }
+
+  await bot.sendMessage(feedback.author, message)
+
+  await bot.sendMessage(chat_id, clause)
+
+  information = await feedback_pagination(1, 6, query)
 
   if (information.kw === 'YES') {
     await bot.editMessageText(information.text, {
@@ -184,7 +152,7 @@ const afs6 = async (bot, chat_id, message_id, data, _id) => {
   } else if (information.kw === 'NO') {
     await bot.deleteMessage(chat_id, message_id)
 
-    await bot.sendMessage(chat_id, information.text, {reply_markup: information.kbs.reply_markup})
+    await bot.sendMessage(chat_id, information.text, information.kbs)
   }
 }
 
@@ -192,11 +160,11 @@ const adminFeedback = async (bot, chat_id, text) => {
   try {
     if (text === kb.admin.pages.feedback) await afs0(bot, chat_id)
     if (text === kb.admin.feedback.number) await afs1(bot, chat_id)
-    if (text === kb.admin.feedback.read) await afs2(bot, chat_id)
-    if (text === kb.admin.feedback.doing) await afs3(bot, chat_id)
+    if (text === kb.admin.feedback.read) await afs2(bot, chat_id, 'ACTIVE')
+    if (text === kb.admin.feedback.doing) await afs2(bot, chat_id, 'SEEN')
   } catch (e) {
     console.log(e)
   }
 }
 
-module.exports = {adminFeedback, afs4, afs5, afs6}
+module.exports = {adminFeedback, afs3, afs4, afs5}

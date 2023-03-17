@@ -1,5 +1,8 @@
+const axios = require('axios')
+const FormData = require('form-data')
 const kb = require('./../../helpers/keyboard-buttons')
 const keyboard = require('./../../helpers/keyboard')
+const config = require('./../../helpers/config')
 const {mkdir} = require('fs/promises')
 const {existsSync} = require('fs')
 const {rename, readFile} = require('fs/promises')
@@ -32,32 +35,47 @@ const afls2 = async (bot, chat_id, text) => {
   await bot.sendMessage(chat_id, report.text, report.kbs)
 }
 
-const afls3 = async (bot, chat_id, message_id, data) => {
-  let query, report
-
+const afls3 = async (bot, chat_id, message_id, page) => {
   const type = (await getAdmin({telegram_id: chat_id})).situation.split('_')
 
-  if ((data[0] === 'left' || data[0] === 'right') && data[1] === 'felicitations') {
-    query = {author: chat_id, type: type[1], status: 'active'}
+  const report = await felicitation_pagination(parseInt(page), 6, {author: chat_id, type: type[1], status: 'active'})
 
-    report = await felicitation_pagination(parseInt(data[2]), 6, query)
-  }
-
-  if (report) {
-    const kbb = report.kbs
-
-    await bot.editMessageText(report.text, {chat_id, message_id, parse_mode: 'HTML', reply_markup: kbb})
-  }
+  await bot.editMessageText(report.text, {chat_id, message_id, parse_mode: 'HTML', reply_markup: report.kbs})
 }
 
 const afls4 = async (bot, chat_id, message_id, _id) => {
   const felicitation = await getFelicitation({_id}), message = report(felicitation, 'FELICITATION', kb.language.uz)
 
-  await bot.editMessageMedia({type: 'audio', media: felicitation.file, caption: message, parse_mode: 'HTML'}, {
-    chat_id, message_id, reply_markup: {
+  const audio = await readFile(felicitation.file);
+
+  const data = {
+    chat_id, message_id, media: {type: 'media', media: felicitation.telegram_link, caption: message, parse_mode: 'HTML'},
+    reply_markup: JSON.stringify({
       inline_keyboard: [[{text: kb.options.back.uz, callback_data: JSON.stringify({phrase: 'fl_back', id: ''})}]]
-    }
+    })
+  }
+
+// prepare the request data
+  const formData = new FormData();
+  formData.append('chat_id', chat_id);
+  formData.append('message_id', message_id);
+  formData.append('audio', audio, { filename: `${felicitation.title}.mp3` });
+  formData.append('caption', message);
+  formData.append('parse_mode', 'HTML');
+  formData.append('reply_markup', JSON.stringify({
+    inline_keyboard: [[{text: kb.options.back.uz, callback_data: JSON.stringify({phrase: 'fl_back', id: ''})}]]
+  }));
+
+// send the request to Telegram API
+  await axios.post(`https://api.telegram.org/bot${config.TOKEN}/editMessageMedia`, data, {
+    headers: {'Content-Type': 'multipart/form-data'}
   })
+
+  // await bot.editMessageMedia({type: 'audio', media: felicitation.file, caption: message, parse_mode: 'HTML'}, {
+  //   chat_id, message_id, reply_markup: {
+  //     inline_keyboard: [[{text: kb.options.back.uz, callback_data: JSON.stringify({phrase: 'fl_back', id: ''})}]]
+  //   }
+  // })
 }
 
 const afls5 = async (bot, chat_id, message_id) => {
@@ -81,9 +99,10 @@ const afls6 = async (bot, chat_id) => {
 const afls7 = async (bot, chat_id, _id, text) => {
   await updateFelicitation({_id}, {type: text, step: 1})
 
-  const path = join(__dirname, `${kb.options.paths.felicitation}/${text}`)
+  const path = kb.options.paths.felicitation
 
-  if (!existsSync(path)) await mkdir(join(__dirname, kb.options.paths.felicitation, `/${text}`))
+  if (!existsSync(join(__dirname, `${path}/${text}`)))
+    await mkdir(join(__dirname, path, `/${text}`))
 
   await bot.sendMessage(chat_id, "Tabrikning sarlavhasini jo'nating", {
     reply_markup: {resize_keyboard: true, keyboard: keyboard.options.back.uz, one_time_keyboard: true}
@@ -130,9 +149,7 @@ const afls11 = async (bot, chat_id, _id, text) => {
 
     const downloaded_path = await bot.downloadFile(felicitation.telegram_link, join(__dirname, `${kb.options.paths.felicitation}/${felicitation.type}/`))
 
-    const old_path = join(downloaded_path)
-
-    await rename(old_path, new_path)
+    await rename(join(downloaded_path), new_path)
 
     await updateFelicitation({_id}, {file: new_path, step: 5, status: 'active'})
 
@@ -167,7 +184,7 @@ const adminFelicitations = async (bot, chat_id, text) => {
   if (text === kb.admin.felicitations.all) await afls1(bot, chat_id)
   if (text === kb.admin.felicitations.add) await afls6(bot, chat_id)
 
-  if (admin.step === 5) {
+  if (admin.step === 6) {
     if (text === kb.options.back.uz) {
       await updateAdmin({telegram_id: chat_id}, {situation: '', step: 0})
       await afls0(bot, chat_id)

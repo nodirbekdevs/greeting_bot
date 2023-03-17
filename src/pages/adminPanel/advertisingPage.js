@@ -33,21 +33,25 @@ const aas2 = async (bot, chat_id) => {
     count = await countAdvertisements({status: 'active'})
 
   for (let i = 0; i < advertisements.length; i++) {
+    let rm
+
     const advertising = advertisements[i], message = report(advertising, 'ADVERTISING', kb.language.uz)
 
     if (!advertising.is_send && advertising.status === 'approved') {
-      await bot.sendPhoto(chat_id, advertising.image, {caption: message, parse_mode: 'HTML'})
+      rm = {reply_markup: {}}
     } else {
-      await bot.sendPhoto(chat_id, advertising.image, {
-        caption: message,
-        parse_mode: 'HTML',
+      rm = {
         reply_markup: {
           inline_keyboard: [[{
             text: kb.options.send_advertise, callback_data: JSON.stringify({phrase: 'SEND_AD', id: advertising._id})
           }]]
         }
-      })
+      }
     }
+
+    await bot.sendPhoto(chat_id, advertising.image, {
+      caption: message, parse_mode: 'HTML', reply_markup: rm.reply_markup
+    })
   }
 
   await bot.sendMessage(chat_id, `Barcha reklamalar - ${count}`)
@@ -65,6 +69,7 @@ const aas3 = async (bot, chat_id) => {
 
 const aas4 = async (bot, chat_id, _id, text) => {
   await updateAdvertising({_id}, {image: text, step: 1})
+
   await bot.sendMessage(chat_id, "Reklamaning sarlavhasini kiriting", {
     reply_markup: {resize_keyboard: true, keyboard: keyboard.options.back.uz}
   })

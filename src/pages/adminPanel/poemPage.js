@@ -32,22 +32,13 @@ const aps2 = async (bot, chat_id, text) => {
   await bot.sendMessage(chat_id, report.text, report.kbs)
 }
 
-const aps3 = async (bot, chat_id, message_id, data) => {
-  let query, report
-
+const aps3 = async (bot, chat_id, message_id, page) => {
   const type = (await getAdmin({telegram_id: chat_id})).situation.split('_')
 
-  if ((data[0] === 'left' || data[0] === 'right') && data[1] === 'poems') {
-    query = {author: chat_id, type: type[1], status: 'active'}
+  const report = await poem_pagination(parseInt(page), 6, {author: chat_id, type: type[1], status: 'active'})
 
-    report = await poem_pagination(parseInt(data[2]), 6, query)
-  }
+  await bot.editMessageText(report.text, {chat_id, message_id, parse_mode: 'HTML', reply_markup: report.kbs})
 
-  if (report) {
-    const kbb = report.kbs
-
-    await bot.editMessageText(report.text, {chat_id, message_id, parse_mode: 'HTML', reply_markup: kbb})
-  }
 }
 
 const aps4 = async (bot, chat_id, message_id, _id) => {
@@ -60,14 +51,11 @@ const aps4 = async (bot, chat_id, message_id, _id) => {
   console.log("LINK")
 
 
-
   await bot.editMessageMedia({type: 'audio', media: poem.file, caption: message, parse_mode: 'HTML'}, {
-    chat_id, message_id,  reply_markup: {
+    chat_id, message_id, reply_markup: {
       inline_keyboard: [[{text: kb.options.back.uz, callback_data: JSON.stringify({phrase: 'po_back', id: ''})}]]
     }
   })
-
-  // await bot.editMessageMedia({media: poem.telegram_link, chat_id, message_id})
 }
 
 const aps5 = async (bot, chat_id, message_id) => {
